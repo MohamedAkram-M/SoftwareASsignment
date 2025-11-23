@@ -1,0 +1,370 @@
+# Restaurant Ordering & Billing System - Architecture Documentation
+
+## Table of Contents
+1. [System Overview](#system-overview)
+2. [Design Patterns Implementation](#design-patterns-implementation)
+3. [SOLID Principles](#solid-principles)
+4. [Class Diagram](#class-diagram)
+5. [How to Compile and Run](#how-to-compile-and-run)
+
+---
+
+## System Overview
+
+This Restaurant Ordering & Billing System is a comprehensive Java application that demonstrates professional software engineering practices through the implementation of 8 design patterns and adherence to all SOLID principles.
+
+### Key Features
+- Multiple menu types (Vegetarian, Non-Vegetarian, Kids)
+- Customizable menu items with add-ons
+- Various payment methods (Cash, Credit Card, Mobile Wallet)
+- Multiple discount strategies
+- Order notifications to kitchen and waiter systems
+- Support for different order types (Dine-in, Delivery, Takeaway)
+
+---
+
+## Design Patterns Implementation
+
+### 1. **Decorator Pattern** (Structural)
+**Purpose:** Adds responsibilities to menu items dynamically (add-ons/customizations)
+
+**Implementation:**
+- `MenuItem` - Component interface
+- `Pizza`, `Burger`, `ChickenDish`, `MeatDish` - Concrete components
+- `MenuItemDecorator` - Abstract decorator
+- `ExtraCheeseDecorator`, `SpecialSauceDecorator`, `ExtraToppingsDecorator` - Concrete decorators
+
+**Example:**
+```java
+MenuItem pizza = new Pizza("Italian Pizza", "Authentic Italian", 14.99);
+pizza = new ExtraCheeseDecorator(pizza);
+pizza = new SpecialSauceDecorator(pizza);
+// Now pizza has extra cheese and special sauce
+```
+
+### 2. **Abstract Factory Pattern** (Creational)
+**Purpose:** Creates families of related menu items without specifying concrete classes
+
+**Implementation:**
+- `MenuFactory` - Abstract factory interface
+- `VegetarianMenuFactory`, `NonVegetarianMenuFactory`, `KidsMenuFactory` - Concrete factories
+- Each factory creates: Main Dish, Side Dish, Drink
+
+**Example:**
+```java
+MenuFactory factory = new VegetarianMenuFactory();
+MenuItem mainDish = factory.createMainDish();
+MenuItem sideDish = factory.createSideDish();
+```
+
+### 3. **Factory Method Pattern** (Creational)
+**Purpose:** Creates menu item variants dynamically based on specifications
+
+**Implementation:**
+- `MenuItemCreator` - Creator abstract class
+- `PizzaCreator`, `BurgerCreator` - Concrete creators
+- Creates variants: Italian Pizza, Eastern Pizza, Classic Burger, etc.
+
+**Example:**
+```java
+PizzaCreator creator = new PizzaCreator();
+MenuItem italianPizza = creator.createMenuItem("italian");
+```
+
+### 4. **Observer Pattern** (Behavioral)
+**Purpose:** Notifies kitchen and waiter systems when orders are placed
+
+**Implementation:**
+- `OrderObserver` - Observer interface
+- `Order` - Subject that maintains observers
+- `KitchenSystem`, `WaiterSystem` - Concrete observers
+
+**Example:**
+```java
+Order order = new Order("John", "Dine-In");
+order.attach(new KitchenSystem());
+order.attach(new WaiterSystem());
+order.notifyObservers(); // Both systems get notified
+```
+
+### 5. **Strategy Pattern - Payment** (Behavioral)
+**Purpose:** Allows selection of payment algorithm at runtime
+
+**Implementation:**
+- `PaymentStrategy` - Strategy interface
+- `CashPayment`, `CreditCardPayment`, `MobileWalletPayment` - Concrete strategies
+
+**Example:**
+```java
+PaymentStrategy payment = new CreditCardPayment("1234567890123456");
+payment.pay(50.00);
+```
+
+### 6. **Strategy Pattern - Discount** (Behavioral)
+**Purpose:** Applies different discount calculations based on item category
+
+**Implementation:**
+- `DiscountStrategy` - Strategy interface
+- `PizzaDiscountStrategy`, `ChickenDiscountStrategy`, `MeatDiscountStrategy` - Concrete strategies
+
+**Example:**
+```java
+DiscountStrategy discount = new PizzaDiscountStrategy();
+double discountAmount = discount.applyDiscount(15.00, "Pizza"); // 15% off
+```
+
+### 7. **Template Method Pattern** (Behavioral)
+**Purpose:** Defines the skeleton of the order processing algorithm
+
+**Implementation:**
+- `OrderProcessor` - Abstract class with template method `processOrder()`
+- `DineInOrderProcessor`, `DeliveryOrderProcessor`, `TakeawayOrderProcessor` - Concrete implementations
+
+**Workflow Steps:**
+1. Display menu
+2. Select items
+3. Select add-ons
+4. Choose order type
+5. Calculate subtotal
+6. Apply discount
+7. Apply tax
+8. Calculate total
+9. Generate receipt
+10. Process payment
+11. Place order (notify observers)
+
+**Example:**
+```java
+OrderProcessor processor = new DineInOrderProcessor(scanner);
+processor.processOrder(order, paymentStrategy, discountStrategy);
+```
+
+### 8. **Facade Pattern** (Structural)
+**Purpose:** Provides a unified, simplified interface to the complex restaurant system
+
+**Implementation:**
+- `RestaurantFacade` - Facade class that coordinates all subsystems
+- Manages user interaction, order creation, factory selection, and order processing
+
+**Example:**
+```java
+RestaurantFacade restaurant = new RestaurantFacade();
+restaurant.startOrderingProcess();
+```
+
+---
+
+## SOLID Principles
+
+### 1. **Single Responsibility Principle (SRP)**
+Each class has one reason to change:
+- `Order` - Manages order data and observer notifications
+- `KitchenSystem` - Handles kitchen notifications
+- `PaymentStrategy` implementations - Each handles one payment type
+- `DiscountStrategy` implementations - Each handles one discount type
+
+### 2. **Open/Closed Principle (OCP)**
+Classes are open for extension but closed for modification:
+- New menu items can be added without modifying existing code
+- New decorators (add-ons) can be created without changing MenuItem
+- New payment methods can be added by implementing PaymentStrategy
+- New discount strategies can be added without modifying existing code
+
+### 3. **Liskov Substitution Principle (LSP)**
+Subtypes are substitutable for their base types:
+- Any `MenuItemDecorator` can replace `MenuItem`
+- Any `PaymentStrategy` implementation can be used interchangeably
+- Any `DiscountStrategy` implementation can be used interchangeably
+- Any `OrderProcessor` subclass can process orders
+
+### 4. **Interface Segregation Principle (ISP)**
+Clients depend only on interfaces they use:
+- `MenuItem` - Simple interface with only essential methods
+- `OrderObserver` - Single update method
+- `PaymentStrategy` - Only payment-related methods
+- `DiscountStrategy` - Only discount-related methods
+
+### 5. **Dependency Inversion Principle (DIP)**
+Depend on abstractions, not concretions:
+- `Order` depends on `OrderObserver` interface, not concrete implementations
+- `OrderProcessor` depends on `PaymentStrategy` and `DiscountStrategy` interfaces
+- `RestaurantFacade` coordinates through interfaces
+- High-level modules don't depend on low-level modules
+
+---
+
+## Class Diagram Structure
+
+```
+MenuItem (Interface)
+├── Pizza (Concrete)
+├── Burger (Concrete)
+├── ChickenDish (Concrete)
+├── MeatDish (Concrete)
+└── MenuItemDecorator (Abstract)
+    ├── ExtraCheeseDecorator
+    ├── SpecialSauceDecorator
+    └── ExtraToppingsDecorator
+
+MenuFactory (Interface)
+├── VegetarianMenuFactory
+├── NonVegetarianMenuFactory
+└── KidsMenuFactory
+
+MenuItemCreator (Abstract)
+├── PizzaCreator
+└── BurgerCreator
+
+OrderObserver (Interface)
+├── KitchenSystem
+└── WaiterSystem
+
+PaymentStrategy (Interface)
+├── CashPayment
+├── CreditCardPayment
+└── MobileWalletPayment
+
+DiscountStrategy (Interface)
+├── PizzaDiscountStrategy
+├── ChickenDiscountStrategy
+├── MeatDiscountStrategy
+└── NoDiscountStrategy
+
+OrderProcessor (Abstract)
+├── DineInOrderProcessor
+├── DeliveryOrderProcessor
+└── TakeawayOrderProcessor
+
+RestaurantFacade (Facade)
+Order (Subject)
+RestaurantOrderingSystem (Main)
+```
+
+---
+
+## How to Compile and Run
+
+### Prerequisites
+- Java Development Kit (JDK) 8 or higher
+
+### Compilation Steps
+
+1. **Save all files in the same directory:**
+   - Create three Java files with the provided code
+   - Or combine all classes into one file: `RestaurantOrderingSystem.java`
+
+2. **Compile:**
+```bash
+javac RestaurantOrderingSystem.java
+```
+
+3. **Run:**
+```bash
+java RestaurantOrderingSystem
+```
+
+### Usage Instructions
+
+1. **Enter customer name** when prompted
+2. **Select order type** (Dine-In, Delivery, or Takeaway)
+3. **Choose menu type** (Vegetarian, Non-Vegetarian, or Kids)
+4. **Add items** to your order:
+   - Select from menu options
+   - Customize with add-ons
+   - Add multiple items
+   - Enter 0 when done
+5. **Select discount strategy** (if applicable)
+6. **Choose payment method**
+7. **Review receipt** with itemized bill
+8. **Complete payment** and receive order confirmation
+
+### Sample Interaction Flow
+
+```
+Enter customer name: John Doe
+Select Order Type:
+1. Dine-In
+2. Delivery
+3. Takeaway
+Enter choice (1-3): 1
+
+Select Menu Type:
+1. Vegetarian Menu
+2. Non-Vegetarian Menu
+3. Kids Menu
+Enter choice (1-3): 2
+
+=== MENU OPTIONS ===
+1. Main Dish
+2. Side Dish
+3. Drink
+4. Custom Pizza (Factory Method)
+5. Custom Burger (Factory Method)
+
+Select item to add (1-5, or 0 to finish): 4
+Select Pizza variant:
+1. Italian
+2. Eastern
+3. Classic
+Enter choice: 1
+Created: Italian Pizza
+
+Add customizations?
+1. Extra Cheese (+$2.00)
+2. Special Sauce (+$1.50)
+3. Extra Toppings (+$3.00)
+4. No customization
+Enter choice (1-4): 1
+Added: Italian Pizza - $16.99
+
+[Continue adding items or enter 0]
+
+Select Discount Option:
+1. Pizza Discount (15% off pizza items)
+...
+
+[Receipt and payment processing follows]
+```
+
+---
+
+## Extension Points
+
+The system is designed for easy extension:
+
+1. **Add new menu items:** Implement `MenuItem` interface
+2. **Add new add-ons:** Extend `MenuItemDecorator`
+3. **Add new menu types:** Implement `MenuFactory`
+4. **Add new payment methods:** Implement `PaymentStrategy`
+5. **Add new discounts:** Implement `DiscountStrategy`
+6. **Add new order types:** Extend `OrderProcessor`
+7. **Add new observers:** Implement `OrderObserver`
+
+---
+
+## Design Patterns Summary
+
+| Pattern | Category | Purpose | Implementation |
+|---------|----------|---------|----------------|
+| Decorator | Structural | Add responsibilities dynamically | Menu item customization |
+| Abstract Factory | Creational | Create families of objects | Menu type factories |
+| Factory Method | Creational | Create objects with variants | Pizza/Burger creators |
+| Observer | Behavioral | Notify multiple objects | Kitchen/Waiter notifications |
+| Strategy (Payment) | Behavioral | Algorithm selection at runtime | Payment methods |
+| Strategy (Discount) | Behavioral | Algorithm selection at runtime | Discount calculations |
+| Template Method | Behavioral | Define algorithm skeleton | Order processing workflow |
+| Facade | Structural | Unified interface | Restaurant facade |
+
+---
+
+## Conclusion
+
+This Restaurant Ordering & Billing System demonstrates:
+- ✅ **8 Design Patterns** properly implemented
+- ✅ **All 5 SOLID Principles** adhered to
+- ✅ **Clean Architecture** with clear separation of concerns
+- ✅ **Extensibility** for future enhancements
+- ✅ **Maintainability** through modular design
+- ✅ **Professional Code Structure** with proper documentation
+
+The system can be easily extended with new features without modifying existing code, demonstrating the power of good software design.
